@@ -1,4 +1,5 @@
 import os
+from typing import Generator
 import pandas as pd
 
 
@@ -24,8 +25,12 @@ class Passager:
         self.categorie = categorie
         self.classe = classe
         self.transit_time = transit_time
-
-
+    
+    def __str__(self):
+        return f'Passager catégorie {self.categorie} du groupe #{self.idx}, classe {self.classe} et temps de transit de {self.transit_time}'
+    
+    def __repr__(self):
+        return f'passager du groupe #{self.idx}'
 
 class Groupe:
     """Une classe représentant un groupe de passagers ayant réservé
@@ -67,15 +72,60 @@ class Groupe:
 
         return
 
+    def __str__(self):
+        return f'Groupe #{self.idx} avec {self.get_nombre_passagers()} passager(s), classe {self.classe} et temps de transit de {self.transit_time}'
+
+    def __repr__(self):
+        return f'groupe #{self.idx}'
+    
+    def iter_passagers(self):
+        """Générateur pour la liste des passagers dans le groupe.
+
+        Yields:
+            Passager: instance de la classe Passager
+        """
+        for passager in self.list_passagers:
+            yield passager
+
     def est_seul(self):
         """Renvoie True si le groupe contient au moins un seul
         passager et False sinon.
         """
         return len(self.list_passagers) == 1
     
+    def get_nombre_passagers(self):
+        """Renvoie le nombre de passagers dans le groupe considéré.
+        """
+        return len(self.list_passagers)
+
     def comprend_enfants(self):
         """Renvoie True si le groupe contient au moins un enfant
         en son sein et False sinon.
         """
         return any([passager.categorie == 'enfants' for passager in self.list_passagers])
 
+
+def read_and_preprocess(date):
+    df = pd.read_csv(get_filepath(date))
+
+    # Conversion en TimeStamp
+    df['TransitTime'] = pd.to_datetime(df['TransitTime']).dt.time
+
+    return df
+
+def get_list_passagers(df):
+    list_groupes = []
+
+    for idx, row in df.iterrows():
+
+        list_groupes.append(Groupe(
+            idx=idx,
+            nb_femmes=row['Femmes'],
+            nb_hommes=row['Hommes'],
+            nb_enfants=row['Enfants'],
+            nb_WCHR=row['WCHR'],
+            classe=row['Classe'],
+            transit_time=row['TransitTime']
+        ))
+    
+    return list_groupes
