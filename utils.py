@@ -20,17 +20,18 @@ def get_filepath(date, data_source='data'):
 
 
 class Passager:
-    def __init__(self, idx, categorie, classe, transit_time=0):
-        self.idx = idx
+    def __init__(self, idx_groupe, idx_passager, categorie, classe, transit_time=0):
+        self.idx_groupe = idx_groupe
+        self.idx_passager = idx_passager
         self.categorie = categorie
         self.classe = classe
         self.transit_time = transit_time
     
     def __str__(self):
-        return f'Passager catégorie {self.categorie} du groupe #{self.idx}, classe {self.classe} et temps de transit de {self.transit_time}'
+        return f'Passager #{self.idx_passager} du groupe #{self.idx_groupe}, catégorie {self.categorie}, classe {self.classe} et temps de transit de {self.transit_time}'
     
     def __repr__(self):
-        return f'passager du groupe #{self.idx}'
+        return f'passager #{self.idx_passager} du groupe #{self.idx_groupe}'
 
 class Groupe:
     """Une classe représentant un groupe de passagers ayant réservé
@@ -64,12 +65,13 @@ class Groupe:
         self.list_passagers = []
 
         for categorie, nombre in self.composition.items():
-            self.list_passagers.append(Passager(
-                self.idx,
-                categorie,
-                self.classe,
-                self.transit_time))
-
+            for idx_passager in range(nombre):
+                self.list_passagers.append(Passager(
+                    self.idx,
+                    idx_passager,
+                    categorie,
+                    self.classe,
+                    self.transit_time))
         return
 
     def __str__(self):
@@ -116,10 +118,10 @@ def read_and_preprocess(date):
 def get_list_passagers(df):
     list_groupes = []
 
-    for idx, row in df.iterrows():
+    for idx_groupe, row in df.iterrows():
 
         list_groupes.append(Groupe(
-            idx=idx,
+            idx=idx_groupe,
             nb_femmes=row['Femmes'],
             nb_hommes=row['Hommes'],
             nb_enfants=row['Enfants'],
@@ -129,3 +131,14 @@ def get_list_passagers(df):
         ))
     
     return list_groupes
+
+def print_group(group):
+    """Affiche dans le stdout une description du groupe.
+
+    Args:
+        group (Groupe): Groupe dont on veut la description
+    """
+    print(f'{group}:')
+    for passager in group.iter_passagers():
+        print(f'\t{passager}')
+    print()
